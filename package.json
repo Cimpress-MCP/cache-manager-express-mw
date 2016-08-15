@@ -1,6 +1,6 @@
 {
   "name": "cache-manager-express-mw",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Middleware for Express that uses cache-manager to add a caching layer in front of your application.",
   "main": "src/index.js",
   "scripts": {
