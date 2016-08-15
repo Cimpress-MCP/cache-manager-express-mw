@@ -6,6 +6,10 @@ var caching = function(cache, options) {
   var cacheControlAccessibility =
     options && options.cacheControlAccessibility ? options.cacheControlAccessibility : "public";
 
+  var isProduction = function() {
+    return process.env.NODE_ENV === "production";
+  };
+
   var getMaxAge = function(res) {
     var cacheControlHeader = res.get("Cache-Control");
     if (!cacheControlHeader) {
@@ -23,7 +27,7 @@ var caching = function(cache, options) {
     return new Promise(function(resolve, reject) {
       cache.get(key, function(err, result) {
         if (err) {
-          if (process.env.NODE_ENV !== "production") {
+          if (!isProduction()) {
             console.warn("Error retrieving value from cache: " + err);
           }
         }
@@ -39,7 +43,7 @@ var caching = function(cache, options) {
     return new Promise(function(resolve, reject) {
       cache.ttl(key, function(err, result) {
         if (err) {
-          if (process.env.NODE_ENV !== "production") {
+          if (!isProduction()) {
             console.warn("Error retrieving ttl from cache: " + err);
           }
         }
@@ -76,7 +80,7 @@ var caching = function(cache, options) {
 
       if (/^2/.test(res.statusCode)) {
         cache.set(key, { statusCode: res.statusCode, body: body }, { ttl: getMaxAge(res) }, function(err) {
-          if (process.env.NODE_ENV !== "production") {
+          if (!isProduction()) {
             console.warn("Error setting value in cache: " + err);
           }
         });
@@ -106,7 +110,7 @@ var caching = function(cache, options) {
         }
       })
       .catch(error => {
-        if (process.env.NODE_ENV !== "production") {
+        if (!isProduction()) {
           console.warn("Error accessing cache: " + err);
         }
         next();
