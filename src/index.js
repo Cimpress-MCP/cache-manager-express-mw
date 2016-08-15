@@ -6,6 +6,10 @@ var caching = function(cache, options) {
   var cacheControlAccessibility =
     options && options.cacheControlAccessibility ? options.cacheControlAccessibility : "public";
 
+  var isProduction = function() {
+    return process.env.NODE_ENV === "production";
+  };
+
   var getMaxAge = function(res) {
     var cacheControlHeader = res.get("Cache-Control");
     if (!cacheControlHeader) {
@@ -23,10 +27,11 @@ var caching = function(cache, options) {
     return new Promise(function(resolve, reject) {
       cache.get(key, function(err, result) {
         if (err) {
-          reject(err);
-        } else {
-          resolve(result);
+          if (!isProduction()) {
+            console.warn("Error retrieving value from cache: " + err);
+          }
         }
+        resolve(result);
       });
     });
   };
@@ -38,10 +43,11 @@ var caching = function(cache, options) {
     return new Promise(function(resolve, reject) {
       cache.ttl(key, function(err, result) {
         if (err) {
-          reject(err);
-        } else {
-          resolve(result);
+          if (!isProduction()) {
+            console.warn("Error retrieving ttl from cache: " + err);
+          }
         }
+        resolve(result);
       });
     });
   };
@@ -73,7 +79,11 @@ var caching = function(cache, options) {
       var ret = send(body);
 
       if (/^2/.test(res.statusCode)) {
-        cache.set(key, { statusCode: res.statusCode, body: body }, { ttl: getMaxAge(res) });
+        cache.set(key, { statusCode: res.statusCode, body: body }, { ttl: getMaxAge(res) }, function(err) {
+          if (!isProduction()) {
+            console.warn("Error setting value in cache: " + err);
+          }
+        });
       }
 
       return ret;
@@ -98,6 +108,12 @@ var caching = function(cache, options) {
           handleCacheMiss(res, key);
           next();
         }
+      })
+      .catch(error => {
+        if (!isProduction()) {
+          console.warn("Error accessing cache: " + err);
+        }
+        next();
       });
   };
 
