@@ -1,6 +1,6 @@
 {
   "name": "cache-manager-express-mw",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "Middleware for Express that uses cache-manager to add a caching layer in front of your application.",
   "main": "src/index.js",
   "scripts": {
@@ -22,13 +22,16 @@
   },
   "homepage": "https://github.com/afrasso/cache-manager-express-mw#readme",
   "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-spies": "^0.7.1",
     "grunt": "^1.0.1",
     "grunt-contrib-jshint": "^1.0.0",
     "grunt-jscs": "^3.0.1",
     "grunt-mocha-istanbul": "^5.0.2",
     "grunt-mocha-test": "^0.12.7",
     "mocha": "^3.0.2",
-    "mocha-istanbul": "^0.3.0"
+    "mocha-istanbul": "^0.3.0",
+    "node-uuid": "^1.4.7"
   },
   "dependencies": {
     "bluebird": "^3.4.1",
