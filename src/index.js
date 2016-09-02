@@ -1,71 +1,67 @@
-var _       = require("lodash"),
-    Promise = require("bluebird");
+var _                  = require("lodash"),
+    getCacheKey        = require("./helpers/getcachekey.js"),
+    getCachingStrategy = require("./helpers/getcachingstrategy.js"),
+    Promise            = require("bluebird");
 
 var caching = function(cache, options) {
-  var prefix = options && options.prefix ? `${options.prefix}:` : "";
-  var cacheControlAccessibility =
-    options && options.cacheControlAccessibility ? options.cacheControlAccessibility : "public";
-
   var isProduction = function() {
     return process.env.NODE_ENV === "production";
   };
 
-  var getMaxAge = function(res) {
-    var cacheControlHeader = res.get("Cache-Control");
-    if (!cacheControlHeader) {
-      return;
-    }
-    var match = cacheControlHeader.match(/.*max-age=(\d+).*/);
-    if (!match || match.length < 2) {
-      return;
-    }
-    var maxAge = parseInt(match[1]);
-    return maxAge;
-  };
-
   var getValue = function(key) {
-    return new Promise(function(resolve, reject) {
-      cache.get(key, function(err, result) {
-        if (err && !isProduction()) {
+    var cacheGet = Promise.promisify(cache.get);
+    return cacheGet(key)
+      .catch(err => {
+        if (!isProduction()) {
           console.warn("Error retrieving value from cache: " + err);
         }
-        resolve(result);
       });
-    });
   };
 
   var getTtl = function(key) {
     if (typeof cache.ttl !== "function") {
       return Promise.resolve();
     }
-    return new Promise(function(resolve, reject) {
-      cache.ttl(key, function(err, result) {
-        if (err && !isProduction()) {
+    var cacheTtl = Promise.promisify(cache.ttl);
+    return cacheTtl(key)
+      .catch(err => {
+        if (!isProduction()) {
           console.warn("Error retrieving ttl from cache: " + err);
         }
-        resolve(result);
+        throw err;
       });
-    });
   };
 
-  var setCacheControlHeader = function(res, ttl) {
+  var setCacheControlHeader = function(res, accessibility, ttl) {
     if (ttl) {
-      res.set("Cache-Control", `${cacheControlAccessibility}, max-age=${ttl}`);
+      if (accessibility) {
+        res.set("cache-control", `${accessibility}, max-age=${ttl}`);
+      } else {
+        res.set("cache-control", `max-age=${ttl}`);
+      }
     }
   };
 
   var handleCacheHit = function(res, key, value) {
-    getTtl(key)
-      .then(ttl => setCacheControlHeader(res, ttl))
-      .then(x => {
+    if (!value) {
+      return Promise.resolve(false);
+    }
+
+    return getTtl(key)
+      .then(ttl => {
+        setCacheControlHeader(res, value.accessibility, ttl);
+      })
+      .then(() => {
         // This is dumb, but it results in a prettier JSON format
         try {
           var obj = JSON.parse(value.body);
           res.status(value.statusCode).json(obj);
-        } catch (error) {
+        } catch (err) {
           res.status(value.statusCode).send(value.body);
         }
-      });
+      })
+      .return(true)
+      .catch(err => false);
   };
 
   var handleCacheMiss = function(res, key) {
@@ -75,11 +71,21 @@ var caching = function(cache, options) {
       var ret = send(body);
 
       if (/^2/.test(res.statusCode)) {
-        cache.set(key, { statusCode: res.statusCode, body: body }, { ttl: getMaxAge(res) }, function(err) {
-          if (err && !isProduction()) {
-            console.warn("Error setting value in cache: " + err);
-          }
-        });
+        var cachingStrategy = getCachingStrategy(res);
+        if (cachingStrategy) {
+          var cacheSet = Promise.promisify(cache.set);
+          var cacheValue = {
+            statusCode: res.statusCode,
+            body: body,
+            accessibility: cachingStrategy.accessibility
+          };
+          cacheSet(key, cacheValue, { ttl: cachingStrategy.maxAge })
+            .catch(err => {
+              if (!isProduction()) {
+                console.warn("Error setting value in cache: " + err);
+              }
+            });
+        }
       }
 
       return ret;
@@ -92,20 +98,16 @@ var caching = function(cache, options) {
       return;
     }
 
-    var query = _.assign({ }, options.defaults, req.query);
-    var sortedQueryString = _(query).keys().sortBy().map(key => `${key}=${query[key]}`).join("&");
-    var key = `${prefix}${req.method}:${req.path}?${sortedQueryString}`;
-
+    var key = getCacheKey(req, _.get(options, "prefix"), _.get(options, "defaults"));
     getValue(key)
-      .then(value => {
-        if (value) {
-          handleCacheHit(res, key, value);
-        } else {
+      .then(value => handleCacheHit(res, key, value))
+      .then(isHit => {
+        if (!isHit) {
           handleCacheMiss(res, key);
           next();
         }
       })
-      .catch(error => {
+      .catch(err => {
         if (!isProduction()) {
           console.warn("Error accessing cache: " + err);
         }
