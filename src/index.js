@@ -9,11 +9,17 @@ var caching = function(cache, options) {
   };
 
   var getValue = function(key) {
+    if (options.callbacks.onAttempt) {
+      options.callbacks.onAttempt(key);
+    }
     var cacheGet = Promise.promisify(cache.get);
     return cacheGet(key)
       .catch(err => {
         if (!isProduction()) {
           console.warn("Error retrieving value from cache: " + err);
+        }
+        if (options.callbacks.onError) {
+          options.callbacks.onError(err, key);
         }
       });
   };
@@ -28,7 +34,6 @@ var caching = function(cache, options) {
         if (!isProduction()) {
           console.warn("Error retrieving ttl from cache: " + err);
         }
-        throw err;
       });
   };
 
@@ -47,10 +52,12 @@ var caching = function(cache, options) {
       return Promise.resolve(false);
     }
 
+    if (options.callbacks.onHit) {
+      options.callbacks.onHit(key, value);
+    }
+
     return getTtl(key)
-      .then(ttl => {
-        setCacheControlHeader(res, value.accessibility, ttl);
-      })
+      .then(ttl => setCacheControlHeader(res, value.accessibility, ttl))
       .then(() => {
         // This is dumb, but it results in a prettier JSON format
         try {
@@ -65,6 +72,9 @@ var caching = function(cache, options) {
   };
 
   var handleCacheMiss = function(res, key) {
+    if (options.callbacks.onMiss) {
+      options.callbacks.onMiss(key);
+    }
     var send = res.send.bind(res);
 
     res.send = function(body) {

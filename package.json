@@ -1,6 +1,6 @@
 {
   "name": "cache-manager-express-mw",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Middleware for Express that uses cache-manager to add a caching layer in front of your application.",
   "main": "src/index.js",
   "scripts": {
@@ -8,19 +8,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/afrasso/cache-manager-express-mw.git"
+    "url": "git+https://github.com/Cimpress-MCP/cache-manager-express-mw.git"
   },
   "keywords": [
     "cache-manager",
     "express",
     "cache"
   ],
-  "author": "Anthony Frasso",
+  "author": "Cimpress-MCP",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/afrasso/cache-manager-express-mw/issues"
+    "url": "https://github.com/Cimpress-MCP/cache-manager-express-mw/issues"
   },
-  "homepage": "https://github.com/afrasso/cache-manager-express-mw#readme",
+  "homepage": "https://github.com/Cimpress-MCP/cache-manager-express-mw#readme",
+  "dependencies": {
+    "bluebird": "^3.4.1",
+    "lodash": "^4.15.0"
+  },
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-spies": "^0.7.1",
@@ -32,9 +36,5 @@
     "mocha": "^3.0.2",
     "mocha-istanbul": "^0.3.0",
     "node-uuid": "^1.4.7"
-  },
-  "dependencies": {
-    "bluebird": "^3.4.1",
-    "lodash": "^4.15.0"
   }
 }
