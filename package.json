@@ -32,7 +32,7 @@
     "grunt-contrib-jshint": "^1.0.0",
     "grunt-jscs": "^3.0.1",
     "grunt-mocha-istanbul": "^5.0.2",
-    "grunt-mocha-test": "^0.12.7",
+    "grunt-mocha-test": "^0.13.2",
     "mocha": "^3.0.2",
     "mocha-istanbul": "^0.3.0",
     "node-uuid": "^1.4.7"
