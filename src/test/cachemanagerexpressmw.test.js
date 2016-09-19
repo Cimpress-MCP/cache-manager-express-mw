@@ -31,7 +31,14 @@ describe("CacheManagerExpress", function() {
       })
     };
 
-    context.options = { };
+    context.options = {
+      callbacks: {
+        onHit: chai.spy(function() { }),
+        onMiss: chai.spy(function() { }),
+        onError: chai.spy(function() { }),
+        onAttempt: chai.spy(function() { })
+      }
+    };
 
     context.cachingMiddleware = cacheManagerExpress(context.cacheWrapper, context.options);
 
@@ -86,6 +93,11 @@ describe("CacheManagerExpress", function() {
           expect(context.status).to.be.a.spy.and.to.have.been.called();
           expect(context.send).to.be.a.spy.and.to.have.been.called();
           expect(context.next).to.be.a.spy.and.to.have.been.called();
+
+          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onError).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.not.have.been.called();
         });
     });
   });
@@ -107,12 +119,72 @@ describe("CacheManagerExpress", function() {
           expect(context.status).to.be.a.spy.and.to.have.been.called();
           expect(context.send).to.be.a.spy.and.to.have.been.called();
           expect(context.next).to.be.a.spy.and.to.have.been.called();
+
+          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onError).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
+        });
+    });
+  });
+
+  describe("Getting a request that has not been cached before and options is undefined", function() {
+    it("should cache the response successfully", function() {
+      context.options = undefined;
+      context.cachingMiddleware(context.request, context.response, context.next);
+      return checkDone(context.doneCondition)
+        .then(() => {
+          expect(context.cacheWrapper.get).to.be.a.spy.and.to.have.been.called();
+          expect(context.cacheWrapper.ttl).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.response.set).to.be.a.spy.and.to.not.have.been.called();
+          expect(context).to.not.have.property("cacheControlHeaderValue");
+          expect(context.response.get).to.be.a.spy.and.to.have.been.called();
+          expect(context.cacheWrapper.set).to.be.a.spy.and.to.have.been.called();
+          expect(context.cache).to.exist.and.be.an("object");
+          expect(context.cache).to.have.property("GET:/a/b/c").and.deep
+            .equal({ statusCode: context.statusCode, body: context.body, accessibility: context.accessibility });
+          expect(context.status).to.be.a.spy.and.to.have.been.called();
+          expect(context.send).to.be.a.spy.and.to.have.been.called();
+          expect(context.next).to.be.a.spy.and.to.have.been.called();
         });
     });
   });
 
   describe("Getting a request that has been cached before", function() {
     it("should return the cached response successfully", function() {
+      context.cache["GET:/a/b/c"] = {
+        statusCode: context.statusCode,
+        body: context.body,
+        accessibility: context.accessibility
+      };
+      context.cachingMiddleware(context.request, context.response, context.next);
+      return checkDone(context.doneCondition)
+        .then(() => {
+          expect(context.cacheWrapper.get).to.be.a.spy.and.to.have.been.called();
+          expect(context.cacheWrapper.ttl).to.be.a.spy.and.to.have.been.called();
+          expect(context.response.set).to.be.a.spy.and.to.have.been.called();
+          expect(context).to.have.property("cacheControlHeaderValue").and
+            .equal(`${context.accessibility}, max-age=${context.ttl}`);
+          expect(context.response.get).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.cacheWrapper.set).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.cache).to.exist.and.be.an("object");
+          expect(context.cache).to.have.property("GET:/a/b/c").and.deep
+            .equal({ statusCode: context.statusCode, body: context.body, accessibility: context.accessibility });
+          expect(context.status).to.be.a.spy.and.to.have.been.called();
+          expect(context.send).to.be.a.spy.and.to.have.been.called();
+          expect(context.next).to.be.a.spy.and.to.not.have.been.called();
+
+          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onError).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
+        });
+    });
+  });
+
+  describe("Getting a request that has been cached before and options in undefined", function() {
+    it("should return the cached response successfully", function() {
+      context.options = undefined;
       context.cache["GET:/a/b/c"] = {
         statusCode: context.statusCode,
         body: context.body,
@@ -157,6 +229,11 @@ describe("CacheManagerExpress", function() {
           expect(context.status).to.be.a.spy.and.to.have.been.called();
           expect(context.send).to.be.a.spy.and.to.have.been.called();
           expect(context.next).to.be.a.spy.and.to.have.been.called();
+
+          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onError).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
         });
     });
   });
@@ -181,6 +258,11 @@ describe("CacheManagerExpress", function() {
           expect(context.status).to.be.a.spy.and.to.have.been.called();
           expect(context.send).to.be.a.spy.and.to.have.been.called();
           expect(context.next).to.be.a.spy.and.to.have.been.called();
+
+          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onError).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
         });
     });
   });
@@ -202,14 +284,19 @@ describe("CacheManagerExpress", function() {
           expect(context.cacheWrapper.ttl).to.be.a.spy.and.to.have.been.called();
           expect(context.response.set).to.be.a.spy.and.to.not.have.been.called();
           expect(context).to.not.have.property("cacheControlHeaderValue");
-          expect(context.response.get).to.be.a.spy.and.to.have.been.called();
-          expect(context.cacheWrapper.set).to.be.a.spy.and.to.have.been.called();
+          expect(context.response.get).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.cacheWrapper.set).to.be.a.spy.and.to.not.have.been.called();
           expect(context.cache).to.exist.and.be.an("object");
           expect(context.cache).to.have.property("GET:/a/b/c").and.deep
             .equal({ statusCode: context.statusCode, body: context.body, accessibility: context.accessibility });
           expect(context.status).to.be.a.spy.and.to.have.been.called();
           expect(context.send).to.be.a.spy.and.to.have.been.called();
-          expect(context.next).to.be.a.spy.and.to.have.been.called();
+          expect(context.next).to.be.a.spy.and.to.not.have.been.called();
+
+          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onError).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
         });
     });
   });
@@ -233,6 +320,11 @@ describe("CacheManagerExpress", function() {
           expect(context.status).to.be.a.spy.and.to.have.been.called();
           expect(context.send).to.be.a.spy.and.to.have.been.called();
           expect(context.next).to.be.a.spy.and.to.have.been.called();
+
+          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onError).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
         });
     });
   });
@@ -259,6 +351,11 @@ describe("CacheManagerExpress", function() {
           expect(context.status).to.be.a.spy.and.to.have.been.called();
           expect(context.send).to.be.a.spy.and.to.have.been.called();
           expect(context.next).to.be.a.spy.and.to.have.been.called();
+
+          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onError).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
         });
     });
   });
@@ -282,6 +379,11 @@ describe("CacheManagerExpress", function() {
           expect(context.status).to.be.a.spy.and.to.have.been.called();
           expect(context.send).to.be.a.spy.and.to.have.been.called();
           expect(context.next).to.be.a.spy.and.to.have.been.called();
+
+          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onError).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
         });
     });
   });
@@ -308,6 +410,11 @@ describe("CacheManagerExpress", function() {
           expect(context.status).to.be.a.spy.and.to.have.been.called();
           expect(context.send).to.be.a.spy.and.to.have.been.called();
           expect(context.next).to.be.a.spy.and.to.not.have.been.called();
+
+          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onError).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
         });
     });
   });
@@ -334,6 +441,11 @@ describe("CacheManagerExpress", function() {
           expect(context.status).to.be.a.spy.and.to.have.been.called();
           expect(context.send).to.be.a.spy.and.to.have.been.called();
           expect(context.next).to.be.a.spy.and.to.not.have.been.called();
+
+          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onError).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
         });
     });
   });

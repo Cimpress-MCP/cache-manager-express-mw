@@ -9,7 +9,7 @@ var caching = function(cache, options) {
   };
 
   var getValue = function(key) {
-    if (options.callbacks.onAttempt) {
+    if (_.get(options, "callbacks.onAttempt")) {
       options.callbacks.onAttempt(key);
     }
     var cacheGet = Promise.promisify(cache.get);
@@ -18,7 +18,7 @@ var caching = function(cache, options) {
         if (!isProduction()) {
           console.warn("Error retrieving value from cache: " + err);
         }
-        if (options.callbacks.onError) {
+        if (_.get(options, "callbacks.onError")) {
           options.callbacks.onError(err, key);
         }
       });
@@ -33,6 +33,9 @@ var caching = function(cache, options) {
       .catch(err => {
         if (!isProduction()) {
           console.warn("Error retrieving ttl from cache: " + err);
+        }
+        if (_.get(options, "callbacks.onError")) {
+          options.callbacks.onError(err, key);
         }
       });
   };
@@ -52,7 +55,7 @@ var caching = function(cache, options) {
       return Promise.resolve(false);
     }
 
-    if (options.callbacks.onHit) {
+    if (_.get(options, "callbacks.onHit")) {
       options.callbacks.onHit(key, value);
     }
 
@@ -72,7 +75,7 @@ var caching = function(cache, options) {
   };
 
   var handleCacheMiss = function(res, key) {
-    if (options.callbacks.onMiss) {
+    if (_.get(options, "callbacks.onMiss")) {
       options.callbacks.onMiss(key);
     }
     var send = res.send.bind(res);
@@ -93,6 +96,9 @@ var caching = function(cache, options) {
             .catch(err => {
               if (!isProduction()) {
                 console.warn("Error setting value in cache: " + err);
+              }
+              if (_.get(options, "callbacks.onError")) {
+                options.callbacks.onError(err, key);
               }
             });
         }
