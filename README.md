@@ -44,7 +44,7 @@ A fully functional sample app is available in this repository under the [sample]
 | ----------|-----------|-----------------------------------------------------------------------------------------------|
 | prefix    | undefined | A prefix to append to the front of the generated cache key in case differentiation is needed. |
 | defaults  | undefined | An object containing query string default values so that a missing query string value and the specified default resolve to the same cache key. For example, ```{ defaults: { val: "abc" } }``` will ensure that the routes ```/a/b/c``` and ```/a/b/c?val=abc``` resolve to the same cache key.|
-| callbacks | undefined | An object containing one or more callback functions (see [Callbacks](##Callbacks) below).
+| callbacks | undefined | An object containing one or more callback functions (see [Callbacks](#callbacks) below).
 
 ## Callbacks
 
