@@ -70,8 +70,7 @@ var caching = function(cache, options) {
           res.status(value.statusCode).send(value.body);
         }
       })
-      .return(true)
-      .catch(err => false);
+      .return(true);
   };
 
   var handleCacheMiss = function(res, key) {
@@ -122,12 +121,6 @@ var caching = function(cache, options) {
           handleCacheMiss(res, key);
           next();
         }
-      })
-      .catch(err => {
-        if (!isProduction()) {
-          console.warn("Error accessing cache: " + err);
-        }
-        next();
       });
   };
 
