@@ -40,10 +40,20 @@ A fully functional sample app is available in this repository under the [sample]
 
 ## Options
 
-| Property | Default   | Description                                                                                   |
-| ---------|-----------|-----------------------------------------------------------------------------------------------|
-| prefix   | undefined | A prefix to append to the front of the generated cache key in case differentiation is needed. |
-| defaults | undefined | An object containing query string default values so that a missing query string value and the specified default resolve to the same cache key. For example, ```{ defaults: { val: "abc" } }``` will ensure that the routes ```/a/b/c``` and ```/a/b/c?val=abc``` resolve to the same cache key.|
+| Property  | Default   | Description                                                                                   |
+| ----------|-----------|-----------------------------------------------------------------------------------------------|
+| prefix    | undefined | A prefix to append to the front of the generated cache key in case differentiation is needed. |
+| defaults  | undefined | An object containing query string default values so that a missing query string value and the specified default resolve to the same cache key. For example, ```{ defaults: { val: "abc" } }``` will ensure that the routes ```/a/b/c``` and ```/a/b/c?val=abc``` resolve to the same cache key.|
+| callbacks | undefined | An object containing one or more callback functions (see [Callbacks](#callbacks) below).
+
+## Callbacks
+
+It is possible to specify callback functions that are called when an during attempts to retrieve a value from the cache:
+
+* `onAttempt(key)`: executed when any attempt is made to retrieve a value from the cache
+* `onHit(key, value)`: executed when a cache hit occurs and the value is retrieved from the cache
+* `onMiss(key)`: executed when a cache miss occurs and the value is not present in the cache
+* `onError(err, key)`: executed when an error occurs during the attempt to retrieve a value from the cache
 
 ## License
 

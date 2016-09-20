@@ -5,14 +5,36 @@ var _                   = require("lodash"),
     redisStore          = require("cache-manager-redis");
 
 var app = express();
-var cache = cacheManager.caching({ store: redisStore });
+var cacheOptions = {
+  store: redisStore,
+  retry_strategy: function() { // jscs:ignore requireCamelCaseOrUpperCaseIdentifiers
+    return;
+  }
+};
+var cache = cacheManager.caching(cacheOptions);
 
-app.get("/", cacheManagerExpress(cache), function(req, res) {
+var callbacks = {
+  onHit: function(key, value) {
+    console.log(`Cache hit! key=${key}, value=${value.body}`);
+  },
+  onMiss: function(key) {
+    console.log(`Cache miss! key=${key}`);
+  },
+  onError: function(err, key) {
+    console.log(`Cache error! err=${err}, key=${key}`);
+  },
+  onAttempt: function(key) {
+    console.log(`Cache attempt! key=${key}`);
+  }
+};
+var options = { defaults: { toUpper: false }, callbacks: callbacks };
+
+app.get("/", cacheManagerExpress(cache, options), function(req, res) {
   res.set("cache-control", `private, max-age=300`);
   return res.send("Hello World!");
 });
 
-app.get("/echo", cacheManagerExpress(cache, { defaults: { toUpper: false } }), function(req, res) {
+app.get("/echo", cacheManagerExpress(cache, options), function(req, res) {
   if (req.query.message) {
     var message = req.query.message;
     if (req.query.toUpper) {
