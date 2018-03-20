@@ -2,28 +2,23 @@
   "name": "cache-manager-express-sample",
   "version": "1.0.0",
   "description": "An sample app that shows how to use the cache-manager-express-mw npm package.",
+  "author": "Cimpress-MCP",
+  "license": "MIT",
   "main": "src/app.js",
   "scripts": {
-    "start": "grunt develop",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/app.js",
+    "test": "",
+    "pretest": "jshint ./src && jscs ./src && depcheck ."
   },
-  "author": "Anthony Frasso",
-  "license": "MIT",
   "dependencies": {
     "cache-manager": "^2.1.2",
     "cache-manager-express-mw": "file:..",
-    "cache-manager-redis": "^0.2.4",
-    "express": "^4.14.0"
+    "express": "^4.14.0",
+    "lodash": "^4.17.5"
   },
   "devDependencies": {
-    "grunt": "^1.0.1",
-    "grunt-concurrent": "^2.3.1",
-    "grunt-contrib-jshint": "^1.0.0",
-    "grunt-jscs": "^3.0.1",
-    "grunt-mocha-istanbul": "^5.0.2",
-    "grunt-mocha-test": "^0.13.2",
-    "grunt-node-inspector": "^0.4.2",
-    "grunt-nodemon": "^0.4.2",
-    "mocha": "^3.0.2"
+    "depcheck": "^0.6.9",
+    "jscs": "^3.0.7",
+    "jshint": "^2.9.5"
   }
 }

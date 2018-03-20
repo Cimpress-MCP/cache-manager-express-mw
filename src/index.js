@@ -1,18 +1,18 @@
-var _                  = require("lodash"),
-    getCacheKey        = require("./helpers/getcachekey.js"),
-    getCachingStrategy = require("./helpers/getcachingstrategy.js"),
-    Promise            = require("bluebird");
+const _                  = require("lodash"),
+      getCacheKey        = require("./helpers/getcachekey.js"),
+      getCachingStrategy = require("./helpers/getcachingstrategy.js"),
+      P                  = require("bluebird");
 
-var caching = function(cache, options) {
-  var isProduction = function() {
+const caching = function({ cache, options }) {
+  const isProduction = function() {
     return process.env.NODE_ENV === "production";
   };
 
-  var getValue = function(key) {
+  const getValue = function(key) {
     if (_.get(options, "callbacks.onAttempt")) {
       options.callbacks.onAttempt(key);
     }
-    var cacheGet = Promise.promisify(cache.get);
+    const cacheGet = P.promisify(cache.get);
     return cacheGet(key)
       .catch(err => {
         if (!isProduction()) {
@@ -24,11 +24,11 @@ var caching = function(cache, options) {
       });
   };
 
-  var getTtl = function(key) {
+  const getTtl = function(key) {
     if (typeof cache.ttl !== "function") {
-      return Promise.resolve();
+      return P.resolve();
     }
-    var cacheTtl = Promise.promisify(cache.ttl);
+    const cacheTtl = P.promisify(cache.ttl);
     return cacheTtl(key)
       .catch(err => {
         if (!isProduction()) {
@@ -40,7 +40,7 @@ var caching = function(cache, options) {
       });
   };
 
-  var setCacheControlHeader = function(res, accessibility, ttl) {
+  const setCacheControlHeader = function(res, accessibility, ttl) {
     if (ttl) {
       if (accessibility) {
         res.set("cache-control", `${accessibility}, max-age=${ttl}`);
@@ -50,9 +50,9 @@ var caching = function(cache, options) {
     }
   };
 
-  var handleCacheHit = function(res, key, value) {
+  const handleCacheHit = function(res, key, value) {
     if (!value) {
-      return Promise.resolve(false);
+      return P.resolve(false);
     }
 
     if (_.get(options, "callbacks.onHit")) {
@@ -64,7 +64,7 @@ var caching = function(cache, options) {
       .then(() => {
         // This is dumb, but it results in a prettier JSON format
         try {
-          var obj = JSON.parse(value.body);
+          const obj = JSON.parse(value.body);
           res.status(value.statusCode).json(obj);
         } catch (err) {
           res.status(value.statusCode).send(value.body);
@@ -73,20 +73,20 @@ var caching = function(cache, options) {
       .return(true);
   };
 
-  var handleCacheMiss = function(res, key) {
+  const handleCacheMiss = function(res, key) {
     if (_.get(options, "callbacks.onMiss")) {
       options.callbacks.onMiss(key);
     }
-    var send = res.send.bind(res);
+    const send = res.send.bind(res);
 
     res.send = function(body) {
-      var ret = send(body);
+      const ret = send(body);
 
-      if (/^2/.test(res.statusCode)) {
-        var cachingStrategy = getCachingStrategy(res);
+      if (/^2/.test(res.statusCode) || /^304$/.test(res.statusCode)) {
+        const cachingStrategy = getCachingStrategy({ response: res });
         if (cachingStrategy) {
-          var cacheSet = Promise.promisify(cache.set);
-          var cacheValue = {
+          const cacheSet = P.promisify(cache.set);
+          const cacheValue = {
             statusCode: res.statusCode,
             body: body,
             accessibility: cachingStrategy.accessibility
@@ -107,13 +107,13 @@ var caching = function(cache, options) {
     };
   };
 
-  var middleware = function(req, res, next) {
+  const middleware = function(req, res, next) {
     if (!cache) {
       next();
       return;
     }
 
-    var key = getCacheKey(req, _.get(options, "prefix"), _.get(options, "defaults"));
+    const key = getCacheKey({ request: req, options });
     getValue(key)
       .then(value => handleCacheHit(res, key, value))
       .then(isHit => {

@@ -1,16 +1,16 @@
-var _                   = require("lodash"),
-    assert              = require("chai").assert,
-    chai                = require("chai"),
-    cacheManagerExpress = require("../index.js"),
-    expect              = require("chai").expect,
-    Promise             = require("bluebird"),
-    spies               = require("chai-spies"),
-    uuid                = require("node-uuid");
+const _                   = require("lodash"),
+      assert              = require("chai").assert,
+      chai                = require("chai"),
+      cacheManagerExpress = require("../index.js"),
+      expect              = require("chai").expect,
+      P                   = require("bluebird"),
+      spies               = require("chai-spies"),
+      uuid                = require("uuid/v4");
 
 chai.use(spies);
 
 describe("CacheManagerExpress", function() {
-  var context;
+  let context;
 
   beforeEach(function() {
     context = { };
@@ -40,7 +40,7 @@ describe("CacheManagerExpress", function() {
       }
     };
 
-    context.cachingMiddleware = cacheManagerExpress(context.cacheWrapper, context.options);
+    context.cachingMiddleware = cacheManagerExpress({ cache: context.cacheWrapper, options: context.options });
 
     context.request = { method: "GET", path: "/a/b/c" };
 
@@ -66,7 +66,7 @@ describe("CacheManagerExpress", function() {
     };
 
     context.statusCode = 200;
-    context.body = JSON.stringify({ id: uuid.v4() });
+    context.body = JSON.stringify({ id: uuid() });
     context.next = chai.spy(function() {
       context.response.status(context.statusCode).send(context.body);
     });
@@ -78,7 +78,7 @@ describe("CacheManagerExpress", function() {
 
   describe("Getting a request when there is no cache", function() {
     it("should result in no interaction with the cache", function() {
-      context.cachingMiddleware = cacheManagerExpress(null, context.options);
+      context.cachingMiddleware = cacheManagerExpress({ options: context.options });
       context.cachingMiddleware(context.request, context.response, context.next);
       return checkDone(context.doneCondition)
         .then(() => {
@@ -450,20 +450,20 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  var checkDone = function(condition, maxCount, delay) {
-    var result = condition();
-    var _delay = delay || 20;
-    var _maxCount = !_.isNil(maxCount) ? maxCount : 5;
+  const checkDone = function(condition, maxCount, delay) {
+    const result = condition();
+    const _delay = delay || 20;
+    const _maxCount = !_.isNil(maxCount) ? maxCount : 5;
 
     if (!result) {
       if (_maxCount > 0) {
-        return Promise.delay(_delay)
+        return P.delay(_delay)
           .then(() => checkDone(condition, _maxCount - 1, _delay));
       }
 
       throw new Error("Task did not finish before timeout exceeded.");
     }
 
-    return Promise.resolve(result);
+    return P.resolve(result);
   };
 });

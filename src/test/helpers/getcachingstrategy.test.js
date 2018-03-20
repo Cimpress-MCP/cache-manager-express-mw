@@ -1,8 +1,8 @@
-var getCachingStrategy = require("../../helpers/getcachingstrategy.js"),
-    expect             = require("chai").expect;
+const getCachingStrategy = require("../../helpers/getcachingstrategy.js"),
+      expect             = require("chai").expect;
 
 describe("GetCachingStrategy", function() {
-  var context;
+  let context;
 
   beforeEach(function() {
     context = { };
@@ -16,7 +16,7 @@ describe("GetCachingStrategy", function() {
 
   describe("Getting the caching strategy from a response", function() {
     it("should return the appropriate strategy", function() {
-      var strategy = getCachingStrategy(context.response);
+      const strategy = getCachingStrategy({ response: context.response });
       expect(strategy).to.exist.and.be.an("object");
       expect(strategy).to.have.property("accessibility").and.equal("private");
       expect(strategy).to.have.property("maxAge").and.equal(12345);
@@ -28,7 +28,7 @@ describe("GetCachingStrategy", function() {
       context.response.get = function() {
         return;
       };
-      var strategy = getCachingStrategy(context.response);
+      const strategy = getCachingStrategy({ response: context.response });
       expect(strategy).to.be.undefined;
     });
   });
@@ -38,7 +38,7 @@ describe("GetCachingStrategy", function() {
       context.response.get = function() {
         return "max-age=12345";
       };
-      var strategy = getCachingStrategy(context.response);
+      const strategy = getCachingStrategy({ response: context.response });
       expect(strategy).to.exist.and.be.an("object");
       expect(strategy).to.not.have.property("accessibility");
       expect(strategy).to.have.property("maxAge").and.equal(12345);
@@ -50,7 +50,7 @@ describe("GetCachingStrategy", function() {
       context.response.get = function() {
         return "public";
       };
-      var strategy = getCachingStrategy(context.response);
+      const strategy = getCachingStrategy({ response: context.response });
       expect(strategy).to.be.undefined;
     });
   });
@@ -60,7 +60,7 @@ describe("GetCachingStrategy", function() {
       context.response.get = function() {
         return "protected, max-age=12345";
       };
-      var strategy = getCachingStrategy(context.response);
+      const strategy = getCachingStrategy({ response: context.response });
       expect(strategy).to.exist.and.be.an("object");
       expect(strategy).to.not.have.property("accessibility");
       expect(strategy).to.have.property("maxAge").and.equal(12345);

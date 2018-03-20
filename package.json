@@ -1,11 +1,9 @@
 {
   "name": "cache-manager-express-mw",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Middleware for Express that uses cache-manager to add a caching layer in front of your application.",
-  "main": "src/index.js",
-  "scripts": {
-    "test": "grunt"
-  },
+  "author": "Cimpress-MCP",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Cimpress-MCP/cache-manager-express-mw.git"
@@ -15,26 +13,27 @@
     "express",
     "cache"
   ],
-  "author": "Cimpress-MCP",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Cimpress-MCP/cache-manager-express-mw/issues"
   },
   "homepage": "https://github.com/Cimpress-MCP/cache-manager-express-mw#readme",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "nyc --reporter=text --reporter=html mocha ./src/test/**/*.js --timeout=30000",
+    "pretest": "jshint ./src && jscs ./src && depcheck ."
+  },
   "dependencies": {
     "bluebird": "^3.4.1",
     "lodash": "^4.15.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
-    "chai-spies": "^0.7.1",
-    "grunt": "^1.0.1",
-    "grunt-contrib-jshint": "^1.0.0",
-    "grunt-jscs": "^3.0.1",
-    "grunt-mocha-istanbul": "^5.0.2",
-    "grunt-mocha-test": "^0.13.2",
-    "mocha": "^3.0.2",
-    "mocha-istanbul": "^0.3.0",
-    "node-uuid": "^1.4.7"
+    "chai": "^4.1.2",
+    "chai-spies": "^1.0.0",
+    "depcheck": "^0.6.9",
+    "jscs": "^3.0.7",
+    "jshint": "^2.9.5",
+    "mocha": "^5.0.4",
+    "nyc": "^11.6.0",
+    "uuid": "^3.2.1"
   }
 }
