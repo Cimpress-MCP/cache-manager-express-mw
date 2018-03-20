@@ -2,7 +2,7 @@ language: node_js
 node_js:
 - '6'
 script:
-- yarn test
+- npm test
 deploy:
   provider: npm
   email: mcp_infrastructure@cimpress.com

@@ -114,6 +114,84 @@ describe("CacheManagerExpress", () => {
     });
   });
 
+  describe("Getting a request that has not been cached before and the service returns a 304", () => {
+    it("should cache the response successfully", () => {
+      context.statusCode = 304;
+
+      context.cachingMiddleware(context.request, context.response, context.next);
+      return checkDone(context.doneCondition)
+        .then(() => {
+          expect(context.cacheWrapper.get).to.be.a.spy.and.to.have.been.called();
+          expect(context.cacheWrapper.ttl).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.response.set).to.be.a.spy.and.to.not.have.been.called();
+          expect(context).to.not.have.property("cacheControlHeaderValue");
+          expect(context.response.get).to.be.a.spy.and.to.have.been.called();
+          expect(context.cacheWrapper.set).to.be.a.spy.and.to.have.been.called();
+          expect(context.cache).to.exist.and.be.an("object");
+          expect(context.cache).to.have.property("GET:/a/b/c").and.deep
+            .equal({ statusCode: context.statusCode, body: context.body, accessibility: context.accessibility });
+          expect(context.status).to.be.a.spy.and.to.have.been.called();
+          expect(context.send).to.be.a.spy.and.to.have.been.called();
+          expect(context.next).to.be.a.spy.and.to.have.been.called();
+
+          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onError).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
+        });
+    });
+  });
+
+  describe("Getting a request that has not been cached before and the service returns a 500", () => {
+    it("should not cache the response", () => {
+      context.statusCode = 500;
+
+      context.cachingMiddleware(context.request, context.response, context.next);
+      return checkDone(context.doneCondition)
+        .then(() => {
+          expect(context.cacheWrapper.get).to.be.a.spy.and.to.have.been.called();
+          expect(context.cacheWrapper.ttl).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.response.set).to.be.a.spy.and.to.not.have.been.called();
+          expect(context).to.not.have.property("cacheControlHeaderValue");
+          expect(context.response.get).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.cacheWrapper.set).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.cache).to.exist.and.be.an("object");
+          expect(context.cache).to.not.have.property("GET:/a/b/c");
+          expect(context.status).to.be.a.spy.and.to.have.been.called();
+          expect(context.send).to.be.a.spy.and.to.have.been.called();
+          expect(context.next).to.be.a.spy.and.to.have.been.called();
+
+          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.have.been.called();
+          expect(context.options.callbacks.onError).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
+        });
+    });
+  });
+
+  describe("Getting a request that has not been cached before and no callbacks are defined", () => {
+    it("should not cause an error", () => {
+      context.options.callbacks = {};
+
+      context.cachingMiddleware(context.request, context.response, context.next);
+      return checkDone(context.doneCondition)
+        .then(() => {
+          expect(context.cacheWrapper.get).to.be.a.spy.and.to.have.been.called();
+          expect(context.cacheWrapper.ttl).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.response.set).to.be.a.spy.and.to.not.have.been.called();
+          expect(context).to.not.have.property("cacheControlHeaderValue");
+          expect(context.response.get).to.be.a.spy.and.to.have.been.called();
+          expect(context.cacheWrapper.set).to.be.a.spy.and.to.have.been.called();
+          expect(context.cache).to.exist.and.be.an("object");
+          expect(context.cache).to.have.property("GET:/a/b/c").and.deep
+            .equal({ statusCode: context.statusCode, body: context.body, accessibility: context.accessibility });
+          expect(context.status).to.be.a.spy.and.to.have.been.called();
+          expect(context.send).to.be.a.spy.and.to.have.been.called();
+          expect(context.next).to.be.a.spy.and.to.have.been.called();
+        });
+    });
+  });
+
   describe("Getting a request that has not been cached before and options is undefined", () => {
     it("should cache the response successfully", () => {
       context.options = undefined;
@@ -136,8 +214,10 @@ describe("CacheManagerExpress", () => {
     });
   });
 
-  describe("Getting a request that has been cached before", () => {
-    it("should return the cached response successfully", () => {
+  describe("Getting a request that has been cached before and no callbacks are defined", () => {
+    it("should not cause an error", () => {
+      context.options.callbacks = {};
+
       context.cache["GET:/a/b/c"] = {
         statusCode: context.statusCode,
         body: context.body,
@@ -159,11 +239,6 @@ describe("CacheManagerExpress", () => {
           expect(context.status).to.be.a.spy.and.to.have.been.called();
           expect(context.send).to.be.a.spy.and.to.have.been.called();
           expect(context.next).to.be.a.spy.and.to.not.have.been.called();
-
-          expect(context.options.callbacks.onHit).to.be.a.spy.and.to.have.been.called();
-          expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.not.have.been.called();
-          expect(context.options.callbacks.onError).to.be.a.spy.and.to.not.have.been.called();
-          expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
         });
     });
   });
@@ -249,6 +324,30 @@ describe("CacheManagerExpress", () => {
     });
   });
 
+  describe("Getting an error when accessing the cache on a get and no callbacks are defined", () => {
+    it("should not cause an error", () => {
+      context.options.callbacks = {};
+
+      context.cacheWrapper.get = chai.spy((key, cb) => cb("The cache could not be reached."));
+      context.cachingMiddleware(context.request, context.response, context.next);
+      return checkDone(context.doneCondition)
+        .then(() => {
+          expect(context.cacheWrapper.get).to.be.a.spy.and.to.have.been.called();
+          expect(context.cacheWrapper.ttl).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.response.set).to.be.a.spy.and.to.not.have.been.called();
+          expect(context).to.not.have.property("cacheControlHeaderValue");
+          expect(context.response.get).to.be.a.spy.and.to.have.been.called();
+          expect(context.cacheWrapper.set).to.be.a.spy.and.to.have.been.called();
+          expect(context.cache).to.exist.and.be.an("object");
+          expect(context.cache).to.have.property("GET:/a/b/c").and.deep
+            .equal({ statusCode: context.statusCode, body: context.body, accessibility: context.accessibility });
+          expect(context.status).to.be.a.spy.and.to.have.been.called();
+          expect(context.send).to.be.a.spy.and.to.have.been.called();
+          expect(context.next).to.be.a.spy.and.to.have.been.called();
+        });
+    });
+  });
+
   describe("Getting an error when accessing the cache on retrieving the ttl", () => {
     it("should return the response successfully", () => {
       context.cache["GET:/a/b/c"] = {
@@ -281,6 +380,35 @@ describe("CacheManagerExpress", () => {
     });
   });
 
+  describe("Getting an error when accessing the cache on retrieving the ttl and no callbacks are defined", () => {
+    it("should not cause an error", () => {
+      context.options.callbacks = {};
+
+      context.cache["GET:/a/b/c"] = {
+        statusCode: context.statusCode,
+        body: context.body,
+        accessibility: context.accessibility
+      };
+      context.cacheWrapper.ttl = chai.spy((key, cb) => cb("The cache could not be reached."));
+      context.cachingMiddleware(context.request, context.response, context.next);
+      return checkDone(context.doneCondition)
+        .then(() => {
+          expect(context.cacheWrapper.get).to.be.a.spy.and.to.have.been.called();
+          expect(context.cacheWrapper.ttl).to.be.a.spy.and.to.have.been.called();
+          expect(context.response.set).to.be.a.spy.and.to.not.have.been.called();
+          expect(context).to.not.have.property("cacheControlHeaderValue");
+          expect(context.response.get).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.cacheWrapper.set).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.cache).to.exist.and.be.an("object");
+          expect(context.cache).to.have.property("GET:/a/b/c").and.deep
+            .equal({ statusCode: context.statusCode, body: context.body, accessibility: context.accessibility });
+          expect(context.status).to.be.a.spy.and.to.have.been.called();
+          expect(context.send).to.be.a.spy.and.to.have.been.called();
+          expect(context.next).to.be.a.spy.and.to.not.have.been.called();
+        });
+    });
+  });
+
   describe("Getting an error when accessing the cache on a set", () => {
     it("should return the response successfully", () => {
       context.cacheWrapper.set = chai.spy((key, value, options, cb) => cb("The cache could not be reached."));
@@ -303,6 +431,29 @@ describe("CacheManagerExpress", () => {
           expect(context.options.callbacks.onMiss).to.be.a.spy.and.to.have.been.called();
           expect(context.options.callbacks.onError).to.be.a.spy.and.to.have.been.called();
           expect(context.options.callbacks.onAttempt).to.be.a.spy.and.to.have.been.called();
+        });
+    });
+  });
+
+  describe("Getting an error when accessing the cache on a set and no callbacks are defined", () => {
+    it("should not cause an error", () => {
+      context.options.callbacks = {};
+
+      context.cacheWrapper.set = chai.spy((key, value, options, cb) => cb("The cache could not be reached."));
+      context.cachingMiddleware(context.request, context.response, context.next);
+      return checkDone(context.doneCondition)
+        .then(() => {
+          expect(context.cacheWrapper.get).to.be.a.spy.and.to.have.been.called();
+          expect(context.cacheWrapper.ttl).to.be.a.spy.and.to.not.have.been.called();
+          expect(context.response.set).to.be.a.spy.and.to.not.have.been.called();
+          expect(context).to.not.have.property("cacheControlHeaderValue");
+          expect(context.response.get).to.be.a.spy.and.to.have.been.called();
+          expect(context.cacheWrapper.set).to.be.a.spy.and.to.have.been.called();
+          expect(context.cache).to.exist.and.be.an("object");
+          expect(context.cache).to.not.have.property("GET:/a/b/c");
+          expect(context.status).to.be.a.spy.and.to.have.been.called();
+          expect(context.send).to.be.a.spy.and.to.have.been.called();
+          expect(context.next).to.be.a.spy.and.to.have.been.called();
         });
     });
   });

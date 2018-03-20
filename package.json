@@ -19,7 +19,7 @@
   "homepage": "https://github.com/Cimpress-MCP/cache-manager-express-mw#readme",
   "main": "src/index.js",
   "scripts": {
-    "test": "nyc --reporter=text --reporter=html mocha ./src/test/**/*.js --timeout=30000",
+    "test": "nyc --reporter=text --reporter=html --check-coverage --lines 100 --functions 90 --branches 90 mocha ./src/test/**/*.js --timeout=30000",
     "pretest": "jshint ./src && jscs ./src && depcheck ."
   },
   "dependencies": {
