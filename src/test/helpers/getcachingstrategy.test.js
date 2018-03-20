@@ -1,66 +1,56 @@
-var getCachingStrategy = require("../../helpers/getcachingstrategy.js"),
-    expect             = require("chai").expect;
+const getCachingStrategy = require("../../helpers/getcachingstrategy.js"),
+      expect             = require("chai").expect;
 
-describe("GetCachingStrategy", function() {
-  var context;
+describe("GetCachingStrategy", () => {
+  let context;
 
-  beforeEach(function() {
+  beforeEach(() => {
     context = { };
 
     context.response = {
-      get: function() {
-        return "private, max-age=12345";
-      }
+      get: () => "private, max-age=12345"
     };
   });
 
-  describe("Getting the caching strategy from a response", function() {
-    it("should return the appropriate strategy", function() {
-      var strategy = getCachingStrategy(context.response);
+  describe("Getting the caching strategy from a response", () => {
+    it("should return the appropriate strategy", () => {
+      const strategy = getCachingStrategy({ response: context.response });
       expect(strategy).to.exist.and.be.an("object");
       expect(strategy).to.have.property("accessibility").and.equal("private");
       expect(strategy).to.have.property("maxAge").and.equal(12345);
     });
   });
 
-  describe("Getting the caching strategy from a response without a cache-control header", function() {
-    it("should return undefined", function() {
-      context.response.get = function() {
-        return;
-      };
-      var strategy = getCachingStrategy(context.response);
+  describe("Getting the caching strategy from a response without a cache-control header", () => {
+    it("should return undefined", () => {
+      context.response.get = () => {};
+      const strategy = getCachingStrategy({ response: context.response });
       expect(strategy).to.be.undefined;
     });
   });
 
-  describe("Getting the caching strategy from a cache-control header missing accessibility", function() {
-    it("should return only the max age", function() {
-      context.response.get = function() {
-        return "max-age=12345";
-      };
-      var strategy = getCachingStrategy(context.response);
+  describe("Getting the caching strategy from a cache-control header missing accessibility", () => {
+    it("should return only the max age", () => {
+      context.response.get = () => "max-age=12345";
+      const strategy = getCachingStrategy({ response: context.response });
       expect(strategy).to.exist.and.be.an("object");
       expect(strategy).to.not.have.property("accessibility");
       expect(strategy).to.have.property("maxAge").and.equal(12345);
     });
   });
 
-  describe("Getting the caching strategy from a cache-control header missing the max age", function() {
-    it("should return undefined", function() {
-      context.response.get = function() {
-        return "public";
-      };
-      var strategy = getCachingStrategy(context.response);
+  describe("Getting the caching strategy from a cache-control header missing the max age", () => {
+    it("should return undefined", () => {
+      context.response.get = () => "public";
+      const strategy = getCachingStrategy({ response: context.response });
       expect(strategy).to.be.undefined;
     });
   });
 
-  describe("Getting the caching strategy from a cache-control header with invalid accessibility", function() {
-    it("should return only the max age", function() {
-      context.response.get = function() {
-        return "protected, max-age=12345";
-      };
-      var strategy = getCachingStrategy(context.response);
+  describe("Getting the caching strategy from a cache-control header with invalid accessibility", () => {
+    it("should return only the max age", () => {
+      context.response.get = () => "protected, max-age=12345";
+      const strategy = getCachingStrategy({ response: context.response });
       expect(strategy).to.exist.and.be.an("object");
       expect(strategy).to.not.have.property("accessibility");
       expect(strategy).to.have.property("maxAge").and.equal(12345);

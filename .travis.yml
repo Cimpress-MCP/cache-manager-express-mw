@@ -1,9 +1,8 @@
 language: node_js
 node_js:
 - '6'
-- '5'
 script:
-- grunt
+- npm test
 deploy:
   provider: npm
   email: mcp_infrastructure@cimpress.com
