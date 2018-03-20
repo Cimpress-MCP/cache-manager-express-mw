@@ -9,34 +9,30 @@ const _                   = require("lodash"),
 
 chai.use(spies);
 
-describe("CacheManagerExpress", function() {
+describe("CacheManagerExpress", () => {
   let context;
 
-  beforeEach(function() {
+  beforeEach(() => {
     context = { };
 
     context.cache = { };
 
     context.ttl = 600;
     context.cacheWrapper = {
-      get: chai.spy(function(key, cb) {
-        cb(undefined, context.cache[key]);
-      }),
-      set: chai.spy(function(key, value, options, cb) {
+      get: chai.spy((key, cb) => cb(undefined, context.cache[key])),
+      set: chai.spy((key, value, options, cb) => {
         context.cache[key] = value;
-        cb();
+        return cb();
       }),
-      ttl: chai.spy(function(key, cb) {
-        cb(undefined, 600);
-      })
+      ttl: chai.spy((key, cb) => cb(undefined, 600))
     };
 
     context.options = {
       callbacks: {
-        onHit: chai.spy(function() { }),
-        onMiss: chai.spy(function() { }),
-        onError: chai.spy(function() { }),
-        onAttempt: chai.spy(function() { })
+        onHit: chai.spy(() => {}),
+        onMiss: chai.spy(() => {}),
+        onError: chai.spy(() => {}),
+        onAttempt: chai.spy(() => {})
       }
     };
 
@@ -44,10 +40,8 @@ describe("CacheManagerExpress", function() {
 
     context.request = { method: "GET", path: "/a/b/c" };
 
-    context.send = chai.spy(function() {
-      context.isDone = true;
-    });
-    context.status = chai.spy(function(statusCode) {
+    context.send = chai.spy(() => context.isDone = true);
+    context.status = chai.spy(statusCode => {
       context.response.statusCode = statusCode;
       return context.response;
     });
@@ -55,29 +49,21 @@ describe("CacheManagerExpress", function() {
     context.accessibility = "private";
     context.maxAge = 12345;
     context.response = {
-      get: chai.spy(function() {
-        return `${context.accessibility}, max-age=${context.maxAge}`;
-      }),
-      set: chai.spy(function(header, value) {
-        context.cacheControlHeaderValue = value;
-      }),
+      get: chai.spy(() => `${context.accessibility}, max-age=${context.maxAge}`),
+      set: chai.spy((header, value) => context.cacheControlHeaderValue = value),
       send: context.send,
       status: context.status
     };
 
     context.statusCode = 200;
     context.body = JSON.stringify({ id: uuid() });
-    context.next = chai.spy(function() {
-      context.response.status(context.statusCode).send(context.body);
-    });
+    context.next = chai.spy(() => context.response.status(context.statusCode).send(context.body));
 
-    context.doneCondition = function() {
-      return context.isDone;
-    };
+    context.doneCondition = () => context.isDone;
   });
 
-  describe("Getting a request when there is no cache", function() {
-    it("should result in no interaction with the cache", function() {
+  describe("Getting a request when there is no cache", () => {
+    it("should result in no interaction with the cache", () => {
       context.cachingMiddleware = cacheManagerExpress({ options: context.options });
       context.cachingMiddleware(context.request, context.response, context.next);
       return checkDone(context.doneCondition)
@@ -102,8 +88,8 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  describe("Getting a request that has not been cached before", function() {
-    it("should cache the response successfully", function() {
+  describe("Getting a request that has not been cached before", () => {
+    it("should cache the response successfully", () => {
       context.cachingMiddleware(context.request, context.response, context.next);
       return checkDone(context.doneCondition)
         .then(() => {
@@ -128,8 +114,8 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  describe("Getting a request that has not been cached before and options is undefined", function() {
-    it("should cache the response successfully", function() {
+  describe("Getting a request that has not been cached before and options is undefined", () => {
+    it("should cache the response successfully", () => {
       context.options = undefined;
       context.cachingMiddleware(context.request, context.response, context.next);
       return checkDone(context.doneCondition)
@@ -150,8 +136,8 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  describe("Getting a request that has been cached before", function() {
-    it("should return the cached response successfully", function() {
+  describe("Getting a request that has been cached before", () => {
+    it("should return the cached response successfully", () => {
       context.cache["GET:/a/b/c"] = {
         statusCode: context.statusCode,
         body: context.body,
@@ -182,8 +168,8 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  describe("Getting a request that has been cached before and options in undefined", function() {
-    it("should return the cached response successfully", function() {
+  describe("Getting a request that has been cached before and options in undefined", () => {
+    it("should return the cached response successfully", () => {
       context.options = undefined;
       context.cache["GET:/a/b/c"] = {
         statusCode: context.statusCode,
@@ -210,11 +196,9 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  describe("Handling a response without a cache control header when it has not been cached", function() {
-    it("should return but not cache the response", function() {
-      context.response.get = chai.spy(function() {
-        return null;
-      });
+  describe("Handling a response without a cache control header when it has not been cached", () => {
+    it("should return but not cache the response", () => {
+      context.response.get = chai.spy(() => {});
       context.cachingMiddleware(context.request, context.response, context.next);
       return checkDone(context.doneCondition)
         .then(() => {
@@ -238,11 +222,9 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  describe("Getting an error when accessing the cache on a get", function() {
-    it("should return the response successfully", function() {
-      context.cacheWrapper.get = chai.spy(function(key, cb) {
-        cb("The cache could not be reached.");
-      });
+  describe("Getting an error when accessing the cache on a get", () => {
+    it("should return the response successfully", () => {
+      context.cacheWrapper.get = chai.spy((key, cb) => cb("The cache could not be reached."));
       context.cachingMiddleware(context.request, context.response, context.next);
       return checkDone(context.doneCondition)
         .then(() => {
@@ -267,16 +249,14 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  describe("Getting an error when accessing the cache on retrieving the ttl", function() {
-    it("should return the response successfully", function() {
+  describe("Getting an error when accessing the cache on retrieving the ttl", () => {
+    it("should return the response successfully", () => {
       context.cache["GET:/a/b/c"] = {
         statusCode: context.statusCode,
         body: context.body,
         accessibility: context.accessibility
       };
-      context.cacheWrapper.ttl = chai.spy(function(key, cb) {
-        cb("The cache could not be reached.");
-      });
+      context.cacheWrapper.ttl = chai.spy((key, cb) => cb("The cache could not be reached."));
       context.cachingMiddleware(context.request, context.response, context.next);
       return checkDone(context.doneCondition)
         .then(() => {
@@ -301,11 +281,9 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  describe("Getting an error when accessing the cache on a set", function() {
-    it("should return the response successfully", function() {
-      context.cacheWrapper.set = chai.spy(function(key, value, options, cb) {
-        cb("The cache could not be reached.");
-      });
+  describe("Getting an error when accessing the cache on a set", () => {
+    it("should return the response successfully", () => {
+      context.cacheWrapper.set = chai.spy((key, value, options, cb) => cb("The cache could not be reached."));
       context.cachingMiddleware(context.request, context.response, context.next);
       return checkDone(context.doneCondition)
         .then(() => {
@@ -329,14 +307,10 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  describe("Getting an error when accessing the cache on a get and a set", function() {
-    it("should return the response successfully", function() {
-      context.cacheWrapper.get = chai.spy(function(key, cb) {
-        cb("The cache could not be reached.");
-      });
-      context.cacheWrapper.set = chai.spy(function(key, value, options, cb) {
-        cb("The cache could not be reached.");
-      });
+  describe("Getting an error when accessing the cache on a get and a set", () => {
+    it("should return the response successfully", () => {
+      context.cacheWrapper.get = chai.spy((key, cb) => cb("The cache could not be reached."));
+      context.cacheWrapper.set = chai.spy((key, value, options, cb) => cb("The cache could not be reached."));
       context.cachingMiddleware(context.request, context.response, context.next);
       return checkDone(context.doneCondition)
         .then(() => {
@@ -360,11 +334,9 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  describe("Getting a request that has not been cached before with no accessibility on the response", function() {
-    it("should cache the response successfully", function() {
-      context.response.get = chai.spy(function() {
-        return `max-age=${context.ttl}`;
-      });
+  describe("Getting a request that has not been cached before with no accessibility on the response", () => {
+    it("should cache the response successfully", () => {
+      context.response.get = chai.spy(() => `max-age=${context.ttl}`);
       context.cachingMiddleware(context.request, context.response, context.next);
       return checkDone(context.doneCondition)
         .then(() => {
@@ -388,8 +360,8 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  describe("Getting a request that has been cached with no accessibility on the response", function() {
-    it("should return the cached response successfully", function() {
+  describe("Getting a request that has been cached with no accessibility on the response", () => {
+    it("should return the cached response successfully", () => {
       context.cache["GET:/a/b/c"] = {
         statusCode: context.statusCode,
         body: context.body,
@@ -419,8 +391,8 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  describe("Getting a request that has been cached but the cache does not support retrieving the ttl", function() {
-    it("should return the cached response successfully but without a cache control header", function() {
+  describe("Getting a request that has been cached but the cache does not support retrieving the ttl", () => {
+    it("should return the cached response successfully but without a cache control header", () => {
       context.cache["GET:/a/b/c"] = {
         statusCode: context.statusCode,
         body: context.body,
@@ -450,7 +422,7 @@ describe("CacheManagerExpress", function() {
     });
   });
 
-  const checkDone = function(condition, maxCount, delay) {
+  const checkDone = (condition, maxCount, delay) => {
     const result = condition();
     const _delay = delay || 20;
     const _maxCount = !_.isNil(maxCount) ? maxCount : 5;

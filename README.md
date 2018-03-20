@@ -25,7 +25,7 @@ app.use(cacheManagerExpress({ cache }));
 
 Alternatively, you register the middleware with a specific route to allow for different routes to use different caching mechanisms and options:
 ```js
-app.get("/", cacheManagerExpress({ cache }), function(req, res) {
+app.get("/", cacheManagerExpress({ cache }), (req, res) => {
   // ...
 });
 ```

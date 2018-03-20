@@ -4,9 +4,7 @@ const _                  = require("lodash"),
       P                  = require("bluebird");
 
 const caching = function({ cache, options }) {
-  const isProduction = function() {
-    return process.env.NODE_ENV === "production";
-  };
+  const isProduction = () => process.env.NODE_ENV === "production";
 
   const getValue = function(key) {
     if (_.get(options, "callbacks.onAttempt")) {
