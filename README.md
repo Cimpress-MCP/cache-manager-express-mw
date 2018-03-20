@@ -20,12 +20,12 @@ var cacheManager = require("cache-manager");
 var cache = cacheManager.caching({ store: "memory" });
 
 var cacheManagerExpress = require("cache-manager-express-mw");
-app.use(cacheManagerExpress(cache));
+app.use(cacheManagerExpress({ cache }));
 ```
 
 Alternatively, you register the middleware with a specific route to allow for different routes to use different caching mechanisms and options:
 ```js
-app.get("/", cacheManagerExpress(cache), function(req, res) {
+app.get("/", cacheManagerExpress({ cache }), function(req, res) {
   // ...
 });
 ```
@@ -33,7 +33,7 @@ app.get("/", cacheManagerExpress(cache), function(req, res) {
 In addition to the cache, you can pass in a options object to control the behavior of the middleware:
 ```js
 var cacheManagerExpress = require("cache-manager-express-mw");
-app.use(cacheManagerExpress(cache, { prefix: "MyApp" }));
+app.use(cacheManagerExpress({ cache, options: { prefix: "MyApp" } }));
 ```
 
 A fully functional sample app is available in this repository under the [sample](sample) directory.
@@ -54,6 +54,13 @@ It is possible to specify callback functions that are called when an during atte
 * `onHit(key, value)`: executed when a cache hit occurs and the value is retrieved from the cache
 * `onMiss(key)`: executed when a cache miss occurs and the value is not present in the cache
 * `onError(err, key)`: executed when an error occurs during the attempt to retrieve a value from the cache
+
+## Changelog
+
+### 0.3.0
+
+* Using ES6 syntax.
+* Changed cacheManagerExpress function to take an object `{ cache, options }` rather than the parameters seperately
 
 ## License
 
