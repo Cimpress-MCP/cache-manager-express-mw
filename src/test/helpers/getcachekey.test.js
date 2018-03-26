@@ -9,7 +9,17 @@ describe("GetCacheKey", () => {
 
     context.request = {
       method: "GET",
-      path: "/a/b/c"
+      path: "/a/b/c",
+      get: (header) => {
+        switch (header) {
+          case "accept":
+            return "application/json";
+          case "authorization":
+            return "Bearer abc123";
+          default:
+            return;
+        }
+      }
     };
   });
 
@@ -61,6 +71,20 @@ describe("GetCacheKey", () => {
       context.request.query = { def: 123 };
       const key = getCacheKey({ request: context.request, options: { defaults: { def: false } } });
       expect(key).to.equal("GET:/a/b/c?def=123");
+    });
+  });
+
+  describe("Getting a cache key for a request when a single header should be part of the key", () => {
+    it("should return the expected key", () => {
+      const key = getCacheKey({ request: context.request, options: { headers: "Authorization" } });
+      expect(key).to.equal("GET:authorization:Bearer abc123:/a/b/c");
+    });
+  });
+
+  describe("Getting a cache key for a request when headers should be part of the key", () => {
+    it("should return the expected key", () => {
+      const key = getCacheKey({ request: context.request, options: { headers: [ "Authorization", "Accept" ] } });
+      expect(key).to.equal("GET:accept:application/json:authorization:Bearer abc123:/a/b/c");
     });
   });
 });
