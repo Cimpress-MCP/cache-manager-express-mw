@@ -14,7 +14,7 @@
     "cache-manager": "^2.1.2",
     "cache-manager-express-mw": "file:..",
     "express": "^4.14.0",
-    "lodash": "^4.17.5"
+    "lodash.toupper": "^4.1.2"
   },
   "devDependencies": {
     "depcheck": "^0.6.9",

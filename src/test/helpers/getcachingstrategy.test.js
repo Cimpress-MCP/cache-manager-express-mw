@@ -1,11 +1,11 @@
-const getCachingStrategy = require("../../helpers/getcachingstrategy.js"),
-      expect             = require("chai").expect;
+const expect = require("chai").expect,
+  getCachingStrategy = require("../../helpers/getcachingstrategy.js");
 
 describe("GetCachingStrategy", () => {
   let context;
 
   beforeEach(() => {
-    context = { };
+    context = {};
 
     context.response = {
       get: () => "private, max-age=12345"
@@ -23,7 +23,7 @@ describe("GetCachingStrategy", () => {
 
   describe("Getting the caching strategy from a response without a cache-control header", () => {
     it("should return undefined", () => {
-      context.response.get = () => {};
+      context.response.get = () => { };
       const strategy = getCachingStrategy({ response: context.response });
       expect(strategy).to.be.undefined;
     });

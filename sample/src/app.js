@@ -1,7 +1,7 @@
-const _                   = require("lodash"),
-      cacheManager        = require("cache-manager"),
-      cacheManagerExpress = require("cache-manager-express-mw"),
-      express             = require("express");
+const _toUpper = require("lodash.toupper"),
+  cacheManager = require("cache-manager"),
+  cacheManagerExpress = require("cache-manager-express-mw"),
+  express = require("express");
 
 const app = express();
 const cacheOptions = {
@@ -27,7 +27,7 @@ app.get("/echo", cacheManagerExpress({ cache, options }), (req, res) => {
   if (req.query.message) {
     let message = req.query.message;
     if (req.query.toUpper) {
-      message = _.toUpper(message);
+      message = _toUpper(message);
     }
     res.set("cache-control", `private, max-age=300`);
     return res.send(message);
