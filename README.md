@@ -56,13 +56,6 @@ It is possible to specify callback functions that are called when an during atte
 * `onMiss(key)`: executed when a cache miss occurs and the value is not present in the cache
 * `onError(err, key)`: executed when an error occurs during the attempt to retrieve a value from the cache
 
-## Changelog
-
-### 0.3.0
-
-* Using ES6 syntax.
-* Changed cacheManagerExpress function to take an object `{ cache, options }` rather than the parameters separately.
-
 ## License
 
 [MIT](LICENSE)
