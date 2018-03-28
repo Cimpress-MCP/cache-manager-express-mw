@@ -1,11 +1,11 @@
-const _                   = require("lodash"),
-      assert              = require("chai").assert,
-      chai                = require("chai"),
-      cacheManagerExpress = require("../index.js"),
-      expect              = require("chai").expect,
-      P                   = require("bluebird"),
-      spies               = require("chai-spies"),
-      uuid                = require("uuid/v4");
+const _isNil = require("lodash.isnil"),
+  assert = require("chai").assert,
+  chai = require("chai"),
+  cacheManagerExpress = require("../index.js"),
+  expect = require("chai").expect,
+  P = require("bluebird"),
+  spies = require("chai-spies"),
+  uuid = require("uuid/v4");
 
 chai.use(spies);
 
@@ -13,9 +13,9 @@ describe("CacheManagerExpress", () => {
   let context;
 
   beforeEach(() => {
-    context = { };
+    context = {};
 
-    context.cache = { };
+    context.cache = {};
 
     context.ttl = 600;
     context.cacheWrapper = {
@@ -29,10 +29,10 @@ describe("CacheManagerExpress", () => {
 
     context.options = {
       callbacks: {
-        onHit: chai.spy(() => {}),
-        onMiss: chai.spy(() => {}),
-        onError: chai.spy(() => {}),
-        onAttempt: chai.spy(() => {})
+        onHit: chai.spy(() => { }),
+        onMiss: chai.spy(() => { }),
+        onError: chai.spy(() => { }),
+        onAttempt: chai.spy(() => { })
       }
     };
 
@@ -273,7 +273,7 @@ describe("CacheManagerExpress", () => {
 
   describe("Handling a response without a cache control header when it has not been cached", () => {
     it("should return but not cache the response", () => {
-      context.response.get = chai.spy(() => {});
+      context.response.get = chai.spy(() => { });
       context.cachingMiddleware(context.request, context.response, context.next);
       return checkDone(context.doneCondition)
         .then(() => {
@@ -576,7 +576,7 @@ describe("CacheManagerExpress", () => {
   const checkDone = (condition, maxCount, delay) => {
     const result = condition();
     const _delay = delay || 20;
-    const _maxCount = !_.isNil(maxCount) ? maxCount : 5;
+    const _maxCount = !_isNil(maxCount) ? maxCount : 5;
 
     if (!result) {
       if (_maxCount > 0) {

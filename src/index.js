@@ -1,13 +1,13 @@
-const _                  = require("lodash"),
-      getCacheKey        = require("./helpers/getcachekey.js"),
-      getCachingStrategy = require("./helpers/getcachingstrategy.js"),
-      P                  = require("bluebird");
+const _get = require("lodash.get"),
+  getCacheKey = require("./helpers/getcachekey.js"),
+  getCachingStrategy = require("./helpers/getcachingstrategy.js"),
+  P = require("bluebird");
 
-const caching = function({ cache, options }) {
+const caching = ({ cache, options }) => {
   const isProduction = () => process.env.NODE_ENV === "production";
 
-  const getValue = function(key) {
-    if (_.get(options, "callbacks.onAttempt")) {
+  const getValue = key => {
+    if (_get(options, "callbacks.onAttempt")) {
       options.callbacks.onAttempt(key);
     }
     const cacheGet = P.promisify(cache.get);
@@ -16,13 +16,13 @@ const caching = function({ cache, options }) {
         if (!isProduction()) {
           console.warn("Error retrieving value from cache: " + err);
         }
-        if (_.get(options, "callbacks.onError")) {
+        if (_get(options, "callbacks.onError")) {
           options.callbacks.onError(err, key);
         }
       });
   };
 
-  const getTtl = function(key) {
+  const getTtl = key => {
     if (typeof cache.ttl !== "function") {
       return P.resolve();
     }
@@ -32,13 +32,13 @@ const caching = function({ cache, options }) {
         if (!isProduction()) {
           console.warn("Error retrieving ttl from cache: " + err);
         }
-        if (_.get(options, "callbacks.onError")) {
+        if (_get(options, "callbacks.onError")) {
           options.callbacks.onError(err, key);
         }
       });
   };
 
-  const setCacheControlHeader = function(res, accessibility, ttl) {
+  const setCacheControlHeader = (res, accessibility, ttl) => {
     if (ttl) {
       if (accessibility) {
         res.set("cache-control", `${accessibility}, max-age=${ttl}`);
@@ -48,12 +48,12 @@ const caching = function({ cache, options }) {
     }
   };
 
-  const handleCacheHit = function(res, key, value) {
+  const handleCacheHit = (res, key, value) => {
     if (!value) {
       return P.resolve(false);
     }
 
-    if (_.get(options, "callbacks.onHit")) {
+    if (_get(options, "callbacks.onHit")) {
       options.callbacks.onHit(key, value);
     }
 
@@ -71,13 +71,13 @@ const caching = function({ cache, options }) {
       .return(true);
   };
 
-  const handleCacheMiss = function(res, key) {
-    if (_.get(options, "callbacks.onMiss")) {
+  const handleCacheMiss = (res, key) => {
+    if (_get(options, "callbacks.onMiss")) {
       options.callbacks.onMiss(key);
     }
     const send = res.send.bind(res);
 
-    res.send = function(body) {
+    res.send = body => {
       const ret = send(body);
 
       if (/^2/.test(res.statusCode) || /^304$/.test(res.statusCode)) {
@@ -94,7 +94,7 @@ const caching = function({ cache, options }) {
               if (!isProduction()) {
                 console.warn("Error setting value in cache: " + err);
               }
-              if (_.get(options, "callbacks.onError")) {
+              if (_get(options, "callbacks.onError")) {
                 options.callbacks.onError(err, key);
               }
             });
@@ -105,7 +105,7 @@ const caching = function({ cache, options }) {
     };
   };
 
-  const middleware = function(req, res, next) {
+  const middleware = (req, res, next) => {
     if (!cache) {
       next();
       return;

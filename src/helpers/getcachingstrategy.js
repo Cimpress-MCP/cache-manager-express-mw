@@ -1,6 +1,8 @@
-const _ = require("lodash");
+const _toInteger = require("lodash.tointeger"),
+  _toLower = require("lodash.tolower"),
+  _trim = require("lodash.trim");
 
-const getCachingStrategy = function({ response }) {
+const getCachingStrategy = ({ response }) => {
   const cacheControlHeader = response.get("cache-control");
   if (!cacheControlHeader) {
     return;
@@ -10,9 +12,9 @@ const getCachingStrategy = function({ response }) {
     return;
   }
 
-  const result = { maxAge: _.toInteger(match[3]) };
+  const result = { maxAge: _toInteger(match[3]) };
 
-  const accessibility = _.toLower(_.trim(match[2]));
+  const accessibility = _toLower(_trim(match[2]));
   if (accessibility === "public" || accessibility === "private") {
     result.accessibility = accessibility;
   }

@@ -1,11 +1,11 @@
-const getCacheKey = require("../../helpers/getcachekey.js"),
-      expect      = require("chai").expect;
+const expect = require("chai").expect,
+  getCacheKey = require("../../helpers/getcachekey.js");
 
 describe("GetCacheKey", () => {
   let context;
 
   beforeEach(() => {
-    context = { };
+    context = {};
 
     context.request = {
       method: "GET",
