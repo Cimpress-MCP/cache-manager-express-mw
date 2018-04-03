@@ -11,5 +11,5 @@ deploy:
   on:
     tags: true
     branch: master
-    node: '5'
+    node: '6'
     repo: Cimpress-MCP/cache-manager-express-mw
