@@ -1,6 +1,6 @@
 {
   "name": "cache-manager-express-mw",
-  "version": "0.3.3",
+  "version": "0.3.5",
   "description": "Middleware for Express that uses cache-manager to add a caching layer in front of your application.",
   "author": "Cimpress-MCP",
   "license": "MIT",
